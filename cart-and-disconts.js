@@ -13,7 +13,7 @@ class Voucher {
         type: "interval",
         value: "",
         discount: 10, // 10% of discount
-        active: true,
+        active: false,
       },
       {
         start: 1597870800000, // 20.08.2020
@@ -37,7 +37,7 @@ class Voucher {
         type: "code",
         value: "bbbb",
         discount: 4, // 4% of discount
-        active: true,
+        active: false,
       },
       {
         start: 1594674000000, // 14.07.2020
@@ -66,7 +66,7 @@ class Voucher {
       discountValue += this.checkCodeDiscount(code);
     }
 
-    //this.checkBulkOrderDiscount();
+    //discountValue += this.checkBulkOrderDiscount();
     return discountValue;
   }
 
@@ -127,7 +127,6 @@ class Cart {
 
   applyDiscountCode(code) {
     if (code === undefined || code == "") return;
-    const voucher = new Voucher();
     this.userDiscountCode = code;
   }
 
@@ -153,11 +152,11 @@ class Cart {
 
       // by default bundle discount is 3+1 free = 4 items
       if (totalCount >= bundleSize) {
-        const [minPriceItem, ...rest] = this.items.sort(
+        const [minPriceItem] = this.items.sort(
           (a, b) => a.price - b.price
         );
-        const { price: minPrice, ...r } = minPriceItem;
-        totalPrice -= minPrice;
+        const { price, ...r } = minPriceItem;
+        totalPrice -= price;
       }
     }
 
@@ -223,17 +222,17 @@ cart.addItem({ name: "Product 4", color: "Yellow", price: 4, count: 1 });
 cart.addItem({ name: "Product 5", color: "Yellow", price: 9, count: 1 });
 
 // apply discount voucher by code
-cart.applyDiscountCode("bbbb");
+cart.applyDiscountCode("aabb");
 
 // show the cart after discount code was applied
 console.log(`\n\n\n${cart.renderCart()}`);
 
-const cart2 = new Cart("Cart #2");
+const cart2 = new Cart("Cart #2", 120);
 cart2.addItem({ name: "Product 1", color: "White", price: 6, count: 10 });
 cart2.addItem({ name: "Product 2", color: "Blue", price: 8, count: 2 });
 cart2.addItem({ name: "Product 3", color: "Black", price: 11, count: 3 });
 cart2.addItem({ name: "Product 4", color: "Yellow", price: 3, count: 4 });
 
 // apply discount voucher by code
-cart2.applyDiscountCode("bbbb");
+cart2.applyDiscountCode("aabb");
 console.log(`\n\n\n${cart2.renderCart()}`);
