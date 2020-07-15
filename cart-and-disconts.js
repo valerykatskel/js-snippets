@@ -13,7 +13,7 @@ class Voucher {
         type: "interval",
         value: "",
         discount: 10, // 10% of discount
-        active: false,
+        active: true,
       },
       {
         start: 1597870800000, // 20.08.2020
@@ -21,7 +21,7 @@ class Voucher {
         type: "interval",
         value: "",
         discount: 5, // 5% of discount
-        active: false,
+        active: true,
       },
       {
         start: 1594674000000, // 14.07.2020
@@ -43,8 +43,8 @@ class Voucher {
         start: 1594674000000, // 14.07.2020
         end: 1598043600000, // 22.08.2020
         type: "bundle",
-        value: "3",
-        discount: 0, // 1 iteme will be for free if total count of items will be more than 3
+        value: "4",
+        discount: 0, // 1 item will be for free if the total count of items will be more  or equal than 4
         active: true,
       },
       {
@@ -86,7 +86,7 @@ class Voucher {
 
   checkBundleDiscount() {
     const d = this.getVoucherByType("bundle");
-    if (d.length === 0) return 0;
+    if (d.length === 0) return [];
     const [discount] = d;
     const { value: bundleSize, discount: discountSize, ...rest } = discount;
     return [bundleSize, discountSize];
@@ -99,10 +99,10 @@ class Voucher {
     const [discount] = d;
     const { value: discountCode, discount: discountValue, ...rest } = discount;
 
-    // remove used voucher
-    // this.vouchers = this.vouchers.filter(
-    //   (v) => v.type == "code" && v.value != code
-    // );
+    // After discount code will applied we need remove it
+    this.vouchers = this.vouchers.filter(
+      (v) => !(v.type == "code" && v.value == code)
+    );
     return discountValue;
   }
 
@@ -122,10 +122,12 @@ class Cart {
     this.freeShipping = freeShipping;
     this.shippingPrice = 14;
     this.userDiscountCode = "";
+    this.freeItem = null;
   }
 
   applyDiscountCode(code) {
     if (code === undefined || code == "") return;
+    const voucher = new Voucher();
     this.userDiscountCode = code;
   }
 
@@ -139,22 +141,27 @@ class Cart {
 
     const voucher = new Voucher();
     this.discount = voucher.applyVoucher(this.userDiscountCode);
-    const [bundleSize] = voucher.checkBundleDiscount();
+    const bundle = voucher.checkBundleDiscount();
 
     totalPrice =
       this.discount > 0
         ? totalPrice - totalPrice * (this.discount / 100)
         : totalPrice;
 
-    if (totalCount > bundleSize) {
-      const [minPriceItem, ...rest] = this.items.sort(
-        (a, b) => a.price - b.price
-      );
-      const { price: minPrice, ...r } = minPriceItem;
-      totalPrice -= minPrice;
+    if (bundle.length > 0) {
+      const [bundleSize] = bundle;
+
+      // by default bundle discount is 3+1 free = 4 items
+      if (totalCount >= bundleSize) {
+        const [minPriceItem, ...rest] = this.items.sort(
+          (a, b) => a.price - b.price
+        );
+        const { price: minPrice, ...r } = minPriceItem;
+        totalPrice -= minPrice;
+      }
     }
 
-    return totalPrice;
+    return totalPrice.toFixed(2);
   }
 
   getTotalCount() {
@@ -211,11 +218,12 @@ const cart = new Cart("Cart #1");
 // add some products to cart
 cart.addItem({ name: "Product 1", color: "Blue", price: 10, count: 1 });
 cart.addItem({ name: "Product 2", color: "Green", price: 15, count: 1 });
-cart.addItem({ name: "Product 3", color: "White", price: 5, count: 1 });
-cart.addItem({ name: "Product 4", color: "Yellow", price: 1, count: 1 });
+cart.addItem({ name: "Product 3", color: "White", price: 8, count: 1 });
+cart.addItem({ name: "Product 4", color: "Yellow", price: 4, count: 1 });
+cart.addItem({ name: "Product 5", color: "Yellow", price: 9, count: 1 });
 
 // apply discount voucher by code
-//cart.applyDiscountCode("aabb");
+cart.applyDiscountCode("bbbb");
 
 // show the cart after discount code was applied
 console.log(`\n\n\n${cart.renderCart()}`);
